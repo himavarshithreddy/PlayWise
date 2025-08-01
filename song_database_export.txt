@@ -1,0 +1,40 @@
+Song Database Export
+====================
+Total songs: 4
+
+ID: song_004
+Title: Stairway to Heaven
+Artist: Led Zeppelin
+Duration: 08:02
+Rating: 5/5
+Album: Led Zeppelin IV
+Genre: Rock
+Added: 1754085172
+---
+ID: song_003
+Title: Imagine
+Artist: John Lennon
+Duration: 03:03
+Rating: 5/5
+Album: Imagine
+Genre: Pop
+Added: 1754085172
+---
+ID: song_002
+Title: Hotel California
+Artist: Eagles
+Duration: 06:31
+Rating: 4/5
+Album: Hotel California
+Genre: Rock
+Added: 1754085172
+---
+ID: song_001
+Title: Bohemian Rhapsody
+Artist: Queen
+Duration: 05:54
+Rating: 5/5
+Album: A Night at the Opera
+Genre: Rock
+Added: 1754085172
+---

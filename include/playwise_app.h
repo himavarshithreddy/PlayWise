@@ -8,6 +8,8 @@
 #include "song_database.h"
 #include "sorting.h"
 #include "dashboard.h"
+#include "song_cleaner.h"
+#include "favorite_songs_queue.h"
 #include <string>
 
 /**
@@ -25,6 +27,8 @@ private:
     RatingTree* ratingTree;
     SongDatabase* songDatabase;
     Dashboard* dashboard;
+    SongCleaner* songCleaner;
+    FavoriteSongsQueue* favoriteSongsQueue;
     
     // Application state
     bool isRunning;
@@ -40,6 +44,8 @@ private:
     void handleSortingOperations();
     void handleDashboardOperations();
     void handleSystemOperations();
+    void handleSongCleanerOperations();
+    void handleFavoriteSongsOperations();
     
     // Utility methods
     void clearScreen();

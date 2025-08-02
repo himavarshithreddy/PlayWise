@@ -16,6 +16,3 @@ int main() {
         std::cout << "Error during execution: " << e.what() << std::endl;
         return 1;
     }
-    
-    return 0;
-} 

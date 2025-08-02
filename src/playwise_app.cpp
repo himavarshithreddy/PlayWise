@@ -7,6 +7,7 @@
 // Constructor
 PlayWiseApp::PlayWiseApp() : currentPlaylist(nullptr), playbackHistory(nullptr),
                              ratingTree(nullptr), songDatabase(nullptr), dashboard(nullptr),
+                             songCleaner(nullptr), favoriteSongsQueue(nullptr),
                              isRunning(false), currentUser("User") {
     initializeSystem();
 }
@@ -26,9 +27,14 @@ void PlayWiseApp::initializeSystem() {
     ratingTree = new RatingTree();
     songDatabase = new SongDatabase();
     dashboard = new Dashboard(currentPlaylist, playbackHistory, ratingTree, songDatabase);
+    songCleaner = new SongCleaner();
+    favoriteSongsQueue = new FavoriteSongsQueue();
     
     // Load sample data
     loadSampleData();
+    
+    // Update dashboard stats after loading sample data
+    dashboard->updateStats();
     
     std::cout << "System initialized successfully!" << std::endl;
     std::cout << "Welcome to PlayWise v" << getVersion() << std::endl;
@@ -47,7 +53,9 @@ void PlayWiseApp::displayMainMenu() {
     std::cout << "|  4. Database Operations (HashMap)                          |" << std::endl;
     std::cout << "|  5. Sorting Operations (Merge/Quick/Heap Sort)             |" << std::endl;
     std::cout << "|  6. Dashboard & Analytics                                  |" << std::endl;
-    std::cout << "|  7. System Operations                                      |" << std::endl;
+    std::cout << "|  7. Song Cleaner (Duplicate Removal)                       |" << std::endl;
+    std::cout << "|  8. Favorite Songs Queue                                   |" << std::endl;
+    std::cout << "|  9. System Operations                                      |" << std::endl;
     std::cout << "|  0. Exit                                                   |" << std::endl;
     std::cout << "+==============================================================+" << std::endl;
     std::cout << "Enter your choice: ";
@@ -81,6 +89,7 @@ void PlayWiseApp::handlePlaylistOperations() {
                 std::string artist = getValidString("Enter artist name: ");
                 int duration = getValidInt("Enter duration (in seconds): ", 1, 3600);
                 currentPlaylist->add_song(title, artist, duration);
+                dashboard->updateStats();
                 std::cout << "Song added successfully!" << std::endl;
                 pauseScreen();
                 break;
@@ -89,6 +98,7 @@ void PlayWiseApp::handlePlaylistOperations() {
                 currentPlaylist->display();
                 int index = getValidInt("Enter song index to delete: ", 1, currentPlaylist->getSize());
                 if (currentPlaylist->delete_song(index - 1)) {
+                    dashboard->updateStats();
                     std::cout << "Song deleted successfully!" << std::endl;
                 } else {
                     std::cout << "Failed to delete song!" << std::endl;
@@ -165,8 +175,9 @@ void PlayWiseApp::handleHistoryOperations() {
                     Song undoneSong = playbackHistory->undo_last_play();
                     std::cout << "Undone: " << undoneSong.getTitle() << " - " << undoneSong.getArtist() << std::endl;
                     // Add back to playlist
-                    currentPlaylist->add_song(undoneSong);
-                    std::cout << "Song added back to playlist!" << std::endl;
+                                    currentPlaylist->add_song(undoneSong);
+                dashboard->updateStats();
+                std::cout << "Song added back to playlist!" << std::endl;
                 } else {
                     std::cout << "No songs in history to undo!" << std::endl;
                 }
@@ -175,6 +186,7 @@ void PlayWiseApp::handleHistoryOperations() {
             }
             case 4:
                 playbackHistory->clear_history();
+                dashboard->updateStats();
                 std::cout << "History cleared successfully!" << std::endl;
                 pauseScreen();
                 break;
@@ -241,6 +253,7 @@ void PlayWiseApp::handleRatingOperations() {
                 
                 Song song("", title, artist, duration, rating);
                 ratingTree->insert_song(song, rating);
+                dashboard->updateStats();
                 std::cout << "Song added to rating tree successfully!" << std::endl;
                 pauseScreen();
                 break;
@@ -249,6 +262,7 @@ void PlayWiseApp::handleRatingOperations() {
                 std::string songId = getValidString("Enter song ID: ");
                 int rating = getValidInt("Enter song rating: ", 1, 5);
                 if (ratingTree->delete_song(songId, rating)) {
+                    dashboard->updateStats();
                     std::cout << "Song deleted from rating tree successfully!" << std::endl;
                 } else {
                     std::cout << "Failed to delete song from rating tree!" << std::endl;
@@ -341,6 +355,7 @@ void PlayWiseApp::handleDatabaseOperations() {
                 
                 Song song("", title, artist, duration, rating, album, genre);
                 if (songDatabase->insert_song(song)) {
+                    dashboard->updateStats();
                     std::cout << "Song added to database successfully!" << std::endl;
                 } else {
                     std::cout << "Failed to add song to database!" << std::endl;
@@ -351,6 +366,7 @@ void PlayWiseApp::handleDatabaseOperations() {
             case 8: {
                 std::string songId = getValidString("Enter song ID: ");
                 if (songDatabase->delete_song(songId)) {
+                    dashboard->updateStats();
                     std::cout << "Song deleted from database successfully!" << std::endl;
                 } else {
                     std::cout << "Failed to delete song from database!" << std::endl;
@@ -632,7 +648,7 @@ void PlayWiseApp::run() {
     
     while (isRunning) {
         displayMainMenu();
-        int choice = getValidChoice(0, 7);
+        int choice = getValidChoice(0, 9);
         
         switch (choice) {
             case 0:
@@ -657,6 +673,12 @@ void PlayWiseApp::run() {
                 handleDashboardOperations();
                 break;
             case 7:
+                handleSongCleanerOperations();
+                break;
+            case 8:
+                handleFavoriteSongsOperations();
+                break;
+            case 9:
                 handleSystemOperations();
                 break;
         }
@@ -676,12 +698,16 @@ void PlayWiseApp::shutdown() {
     delete ratingTree;
     delete playbackHistory;
     delete currentPlaylist;
+    delete songCleaner;
+    delete favoriteSongsQueue;
     
     dashboard = nullptr;
     songDatabase = nullptr;
     ratingTree = nullptr;
     playbackHistory = nullptr;
     currentPlaylist = nullptr;
+    songCleaner = nullptr;
+    favoriteSongsQueue = nullptr;
     
     std::cout << "Goodbye!" << std::endl;
 }
@@ -697,9 +723,14 @@ void PlayWiseApp::resetSystem() {
         playbackHistory->clear_history();
         ratingTree->clear();
         songDatabase->clear();
+        songCleaner->clear();
+        favoriteSongsQueue->clear();
         
         // Reload sample data
         loadSampleData();
+        
+        // Update dashboard stats after reset
+        dashboard->updateStats();
         
         std::cout << "System reset successfully!" << std::endl;
     } else {
@@ -720,6 +751,7 @@ void PlayWiseApp::exportSystemData() {
 void PlayWiseApp::importSystemData() {
     std::cout << "Importing system data..." << std::endl;
     if (songDatabase->import_from_file("export_song_database.txt")) {
+        dashboard->updateStats();
         std::cout << "System data imported successfully!" << std::endl;
     } else {
         std::cout << "Failed to import system data!" << std::endl;
@@ -730,9 +762,337 @@ void PlayWiseApp::importSystemData() {
 // Utility methods
 bool PlayWiseApp::isInitialized() const {
     return currentPlaylist != nullptr && playbackHistory != nullptr && 
-           ratingTree != nullptr && songDatabase != nullptr && dashboard != nullptr;
+           ratingTree != nullptr && songDatabase != nullptr && dashboard != nullptr &&
+           songCleaner != nullptr && favoriteSongsQueue != nullptr;
 }
 
 std::string PlayWiseApp::getVersion() const {
     return "1.0.0";
+}
+
+// Song Cleaner Operations
+void PlayWiseApp::handleSongCleanerOperations() {
+    while (true) {
+        clearScreen();
+        std::cout << "=== Song Cleaner (Duplicate Removal) ===" << std::endl;
+        std::cout << "1. Check for duplicates in current playlist" << std::endl;
+        std::cout << "2. Remove duplicates from current playlist" << std::endl;
+        std::cout << "3. Check if a song is a duplicate" << std::endl;
+        std::cout << "4. Add song to cleaner (test)" << std::endl;
+        std::cout << "5. Display cleaner statistics" << std::endl;
+        std::cout << "6. Clean duplicates from database" << std::endl;
+        std::cout << "0. Back to main menu" << std::endl;
+        std::cout << "Enter your choice: ";
+        
+        int choice = getValidChoice(0, 6);
+        
+        switch (choice) {
+            case 0:
+                return;
+            case 1: {
+                std::cout << "Checking for duplicates in current playlist..." << std::endl;
+                std::vector<Song> playlistSongs;
+                // Get songs from current playlist
+                PlaylistNode* current = currentPlaylist->getHead();
+                while (current != nullptr) {
+                    playlistSongs.push_back(current->song);
+                    current = current->next;
+                }
+                
+                std::vector<Song> cleanedSongs = songCleaner->cleanDuplicates(playlistSongs);
+                int duplicates = playlistSongs.size() - cleanedSongs.size();
+                
+                std::cout << "Found " << duplicates << " duplicate(s) in playlist." << std::endl;
+                std::cout << "Original: " << playlistSongs.size() << " songs" << std::endl;
+                std::cout << "After cleaning: " << cleanedSongs.size() << " songs" << std::endl;
+                pauseScreen();
+                break;
+            }
+            case 2: {
+                std::cout << "Removing duplicates from current playlist..." << std::endl;
+                std::vector<Song> playlistSongs;
+                // Get songs from current playlist
+                PlaylistNode* current = currentPlaylist->getHead();
+                while (current != nullptr) {
+                    playlistSongs.push_back(current->song);
+                    current = current->next;
+                }
+                
+                std::vector<Song> cleanedSongs = songCleaner->cleanDuplicates(playlistSongs);
+                int duplicates = playlistSongs.size() - cleanedSongs.size();
+                
+                if (duplicates > 0) {
+                    // Clear current playlist and add cleaned songs
+                    currentPlaylist->clear();
+                    for (const Song& song : cleanedSongs) {
+                        currentPlaylist->add_song(song);
+                    }
+                    dashboard->updateStats();
+                    std::cout << "Removed " << duplicates << " duplicate(s) from playlist." << std::endl;
+                } else {
+                    std::cout << "No duplicates found in playlist." << std::endl;
+                }
+                pauseScreen();
+                break;
+            }
+            case 3: {
+                std::string title = getValidString("Enter song title: ");
+                std::string artist = getValidString("Enter artist name: ");
+                Song testSong("", title, artist, 180, 3);
+                
+                if (songCleaner->isDuplicate(testSong)) {
+                    std::cout << "This song is a duplicate!" << std::endl;
+                } else {
+                    std::cout << "This song is not a duplicate." << std::endl;
+                }
+                pauseScreen();
+                break;
+            }
+            case 4: {
+                std::string title = getValidString("Enter song title: ");
+                std::string artist = getValidString("Enter artist name: ");
+                int duration = getValidInt("Enter duration (in seconds): ", 1, 3600);
+                Song testSong("", title, artist, duration, 3);
+                
+                if (songCleaner->addSong(testSong)) {
+                    std::cout << "Song added to cleaner successfully!" << std::endl;
+                } else {
+                    std::cout << "Song is a duplicate and was not added." << std::endl;
+                }
+                pauseScreen();
+                break;
+            }
+            case 5: {
+                std::cout << "=== Song Cleaner Statistics ===" << std::endl;
+                std::cout << "Unique songs tracked: " << songCleaner->getUniqueSongCount() << std::endl;
+                std::cout << "Cleaner is empty: " << (songCleaner->isEmpty() ? "Yes" : "No") << std::endl;
+                pauseScreen();
+                break;
+            }
+            case 6: {
+                std::cout << "Cleaning duplicates from database..." << std::endl;
+                std::vector<Song> dbSongs = songDatabase->get_all_songs();
+                std::vector<Song> cleanedSongs = songCleaner->cleanDuplicates(dbSongs);
+                int duplicates = dbSongs.size() - cleanedSongs.size();
+                
+                std::cout << "Found " << duplicates << " duplicate(s) in database." << std::endl;
+                std::cout << "Original: " << dbSongs.size() << " songs" << std::endl;
+                std::cout << "After cleaning: " << cleanedSongs.size() << " songs" << std::endl;
+                pauseScreen();
+                break;
+            }
+        }
+    }
+}
+
+// Favorite Songs Queue Operations
+void PlayWiseApp::handleFavoriteSongsOperations() {
+    while (true) {
+        clearScreen();
+        std::cout << "=== Favorite Songs Queue (Auto-Sorted by Listening Time) ===" << std::endl;
+        std::cout << "1. Display favorite songs (sorted by listening time)" << std::endl;
+        std::cout << "2. Add song to favorites" << std::endl;
+        std::cout << "3. Remove song from favorites" << std::endl;
+        std::cout << "4. Update listening time for a song" << std::endl;
+        std::cout << "5. Increment play count for a song" << std::endl;
+        std::cout << "6. Get top favorite song" << std::endl;
+        std::cout << "7. Get top N favorite songs" << std::endl;
+        std::cout << "8. Check if song is in favorites" << std::endl;
+        std::cout << "9. Clear all favorites" << std::endl;
+        std::cout << "10. Auto-update from playback simulation" << std::endl;
+        std::cout << "11. Sync with playback history" << std::endl;
+        std::cout << "12. Get favorites by time range" << std::endl;
+        std::cout << "13. Display detailed statistics" << std::endl;
+        std::cout << "14. Export favorites to file" << std::endl;
+        std::cout << "15. Import favorites from file" << std::endl;
+        std::cout << "0. Back to main menu" << std::endl;
+        std::cout << "Enter your choice: ";
+        
+        int choice = getValidChoice(0, 15);
+        
+        switch (choice) {
+            case 0:
+                return;
+            case 1:
+                favoriteSongsQueue->displayFavorites();
+                pauseScreen();
+                break;
+            case 2: {
+                std::string title = getValidString("Enter song title: ");
+                std::string artist = getValidString("Enter artist name: ");
+                int duration = getValidInt("Enter duration (in seconds): ", 1, 3600);
+                int rating = getValidInt("Enter rating (1-5): ", 1, 5);
+                Song newSong("", title, artist, duration, rating);
+                
+                favoriteSongsQueue->addSong(newSong);
+                std::cout << "Song added to favorites!" << std::endl;
+                pauseScreen();
+                break;
+            }
+            case 3: {
+                std::string title = getValidString("Enter song title: ");
+                std::string artist = getValidString("Enter artist name: ");
+                Song songToRemove("", title, artist, 180, 3);
+                
+                if (favoriteSongsQueue->isInFavorites(songToRemove)) {
+                    favoriteSongsQueue->removeSong(songToRemove);
+                    std::cout << "Song removed from favorites!" << std::endl;
+                } else {
+                    std::cout << "Song not found in favorites." << std::endl;
+                }
+                pauseScreen();
+                break;
+            }
+            case 4: {
+                std::string title = getValidString("Enter song title: ");
+                std::string artist = getValidString("Enter artist name: ");
+                int additionalTime = getValidInt("Enter additional listening time (in seconds): ", 1, 3600);
+                Song songToUpdate("", title, artist, 180, 3);
+                
+                favoriteSongsQueue->updateListeningTime(songToUpdate, additionalTime);
+                std::cout << "Listening time updated! Queue automatically re-sorted." << std::endl;
+                pauseScreen();
+                break;
+            }
+            case 5: {
+                std::string title = getValidString("Enter song title: ");
+                std::string artist = getValidString("Enter artist name: ");
+                Song songToUpdate("", title, artist, 180, 3);
+                
+                favoriteSongsQueue->incrementPlayCount(songToUpdate);
+                std::cout << "Play count incremented! Queue automatically re-sorted." << std::endl;
+                pauseScreen();
+                break;
+            }
+            case 6: {
+                Song topSong = favoriteSongsQueue->getTopFavorite();
+                if (topSong.isValid()) {
+                    std::cout << "Top favorite song: " << topSong.getTitle() << " - " << topSong.getArtist() << std::endl;
+                    std::cout << "Listening time: " << favoriteSongsQueue->getListeningTime(topSong) << " seconds" << std::endl;
+                    std::cout << "Play count: " << favoriteSongsQueue->getPlayCount(topSong) << std::endl;
+                } else {
+                    std::cout << "No favorite songs found." << std::endl;
+                }
+                pauseScreen();
+                break;
+            }
+            case 7: {
+                int count = getValidInt("Enter number of top songs to display: ", 1, 10);
+                std::vector<Song> topSongs = favoriteSongsQueue->getTopFavorites(count);
+                
+                if (topSongs.empty()) {
+                    std::cout << "No favorite songs found." << std::endl;
+                } else {
+                    std::cout << "Top " << count << " favorite songs (sorted by listening time):" << std::endl;
+                    for (size_t i = 0; i < topSongs.size(); i++) {
+                        const Song& song = topSongs[i];
+                        std::cout << (i + 1) << ". " << song.getTitle() << " - " << song.getArtist() << std::endl;
+                        std::cout << "   Listening time: " << favoriteSongsQueue->getListeningTime(song) << " seconds" << std::endl;
+                        std::cout << "   Play count: " << favoriteSongsQueue->getPlayCount(song) << std::endl;
+                    }
+                }
+                pauseScreen();
+                break;
+            }
+            case 8: {
+                std::string title = getValidString("Enter song title: ");
+                std::string artist = getValidString("Enter artist name: ");
+                Song songToCheck("", title, artist, 180, 3);
+                
+                if (favoriteSongsQueue->isInFavorites(songToCheck)) {
+                    std::cout << "Song is in favorites!" << std::endl;
+                    std::cout << "Listening time: " << favoriteSongsQueue->getListeningTime(songToCheck) << " seconds" << std::endl;
+                    std::cout << "Play count: " << favoriteSongsQueue->getPlayCount(songToCheck) << std::endl;
+                } else {
+                    std::cout << "Song is not in favorites." << std::endl;
+                }
+                pauseScreen();
+                break;
+            }
+            case 9: {
+                std::cout << "Are you sure you want to clear all favorites? (y/n): ";
+                std::string confirm = getValidString("");
+                
+                if (confirm == "y" || confirm == "Y") {
+                    favoriteSongsQueue->clear();
+                    std::cout << "All favorites cleared!" << std::endl;
+                } else {
+                    std::cout << "Operation cancelled." << std::endl;
+                }
+                pauseScreen();
+                break;
+            }
+            case 10: {
+                // Simulate auto-update from playback
+                std::cout << "=== Auto-Update from Playback Simulation ===" << std::endl;
+                std::string title = getValidString("Enter song title: ");
+                std::string artist = getValidString("Enter artist name: ");
+                int duration = getValidInt("Enter song duration (in seconds): ", 1, 3600);
+                int playbackTime = getValidInt("Enter playback time (in seconds): ", 1, duration);
+                int rating = getValidInt("Enter rating (1-5): ", 1, 5);
+                
+                Song songToPlay("", title, artist, duration, rating);
+                favoriteSongsQueue->autoUpdateFromPlayback(songToPlay, playbackTime);
+                
+                std::cout << "Song automatically added/updated in favorites!" << std::endl;
+                std::cout << "Queue automatically re-sorted by listening time." << std::endl;
+                pauseScreen();
+                break;
+            }
+            case 11: {
+                // Sync with playback history
+                std::cout << "=== Sync with Playback History ===" << std::endl;
+                
+                // Get recent songs from history
+                std::vector<Song> recentSongs = playbackHistory->get_recent_songs(10);
+                
+                if (recentSongs.empty()) {
+                    std::cout << "No recent playback history found." << std::endl;
+                } else {
+                    favoriteSongsQueue->syncWithHistory(recentSongs);
+                    std::cout << "Favorites synchronized with playback history!" << std::endl;
+                    std::cout << "Queue automatically re-sorted by listening time." << std::endl;
+                }
+                pauseScreen();
+                break;
+            }
+            case 12: {
+                std::cout << "=== Get Favorites by Time Range ===" << std::endl;
+                int minTime = getValidInt("Enter minimum listening time (in seconds): ", 0, 3600);
+                int maxTime = getValidInt("Enter maximum listening time (in seconds): ", minTime, 3600);
+                
+                std::vector<Song> filteredSongs = favoriteSongsQueue->getFavoritesByTimeRange(minTime, maxTime);
+                
+                if (filteredSongs.empty()) {
+                    std::cout << "No songs found in the specified time range." << std::endl;
+                } else {
+                    std::cout << "Songs with listening time between " << minTime << " and " << maxTime << " seconds:" << std::endl;
+                    for (size_t i = 0; i < filteredSongs.size(); i++) {
+                        const Song& song = filteredSongs[i];
+                        std::cout << (i + 1) << ". " << song.getTitle() << " - " << song.getArtist() << std::endl;
+                        std::cout << "   Listening time: " << favoriteSongsQueue->getListeningTime(song) << " seconds" << std::endl;
+                    }
+                }
+                pauseScreen();
+                break;
+            }
+            case 13: {
+                favoriteSongsQueue->displayDetailedStats();
+                pauseScreen();
+                break;
+            }
+            case 14: {
+                std::string filename = getValidString("Enter filename to export to: ");
+                favoriteSongsQueue->exportFavoritesToFile(filename);
+                pauseScreen();
+                break;
+            }
+            case 15: {
+                std::string filename = getValidString("Enter filename to import from: ");
+                favoriteSongsQueue->importFavoritesFromFile(filename);
+                pauseScreen();
+                break;
+            }
+        }
+    }
 } 

@@ -129,12 +129,11 @@ void PlayWiseApp::handlePlaylistOperations() {
                 pauseScreen();
                 break;
             case 7: {
-                std::string searchTerm = getValidString("Enter song title to search: ");
-                Song* foundSong = currentPlaylist->find_song_by_title(searchTerm);
-                if (foundSong) {
-                    std::cout << "Song found: " << foundSong->getTitle() << " - " << foundSong->getArtist() << std::endl;
+                Song* selectedSong = selectSongFromPlaylist("Select song to search");
+                if (selectedSong) {
+                    std::cout << "Selected song: " << selectedSong->getTitle() << " - " << selectedSong->getArtist() << std::endl;
                 } else {
-                    std::cout << "Song not found!" << std::endl;
+                    std::cout << "No song selected." << std::endl;
                 }
                 pauseScreen();
                 break;
@@ -207,11 +206,12 @@ void PlayWiseApp::handleRatingOperations() {
         std::cout << "3. Search songs by rating" << std::endl;
         std::cout << "4. Get top rated songs" << std::endl;
         std::cout << "5. Add song with rating" << std::endl;
-        std::cout << "6. Delete song from rating tree" << std::endl;
+        std::cout << "6. Rate existing song" << std::endl;
+        std::cout << "7. Delete song from rating tree" << std::endl;
         std::cout << "0. Back to main menu" << std::endl;
         std::cout << "Enter your choice: ";
         
-        int choice = getValidChoice(0, 6);
+        int choice = getValidChoice(0, 7);
         
         switch (choice) {
             case 0:
@@ -246,22 +246,92 @@ void PlayWiseApp::handleRatingOperations() {
                 break;
             }
             case 5: {
-                std::string title = getValidString("Enter song title: ");
-                std::string artist = getValidString("Enter artist name: ");
-                int duration = getValidInt("Enter duration (in seconds): ", 1, 3600);
+                Song* selectedSong = selectSongFromDatabase("Select song to add with rating");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
+                
                 int rating = getValidInt("Enter rating (1-5): ", 1, 5);
                 
-                Song song("", title, artist, duration, rating);
-                ratingTree->insert_song(song, rating);
+                // Check if song already has a rating
+                int oldRating = selectedSong->getRating();
+                if (oldRating > 0) {
+                    ratingTree->delete_song(selectedSong->getId(), oldRating);
+                }
+                
+                // Add new rating
+                selectedSong->setRating(rating);
+                ratingTree->insert_song(*selectedSong, rating);
+                songDatabase->update_song_rating(selectedSong->getId(), rating);
+                
                 dashboard->updateStats();
-                std::cout << "Song added to rating tree successfully!" << std::endl;
+                std::cout << "Song added to rating tree successfully! " << selectedSong->getTitle() 
+                          << " now has " << rating << " stars." << std::endl;
                 pauseScreen();
                 break;
             }
             case 6: {
-                std::string songId = getValidString("Enter song ID: ");
-                int rating = getValidInt("Enter song rating: ", 1, 5);
-                if (ratingTree->delete_song(songId, rating)) {
+                // Rate existing song
+                std::cout << "Available songs in database:" << std::endl;
+                std::vector<Song> allSongs = songDatabase->get_all_songs();
+                if (allSongs.empty()) {
+                    std::cout << "No songs in database to rate!" << std::endl;
+                    pauseScreen();
+                    break;
+                }
+                
+                // Display available songs
+                for (size_t i = 0; i < allSongs.size(); i++) {
+                    std::cout << (i + 1) << ". " << allSongs[i].getTitle() 
+                              << " - " << allSongs[i].getArtist() 
+                              << " (Current rating: " << allSongs[i].getRating() << ")" << std::endl;
+                }
+                
+                int songChoice = getValidInt("Select song number: ", 1, allSongs.size());
+                int newRating = getValidInt("Enter new rating (1-5): ", 1, 5);
+                
+                Song selectedSong = allSongs[songChoice - 1];
+                std::string songId = selectedSong.getId();
+                
+                // Remove old rating if exists
+                int oldRating = selectedSong.getRating();
+                if (oldRating > 0) {
+                    ratingTree->delete_song(songId, oldRating);
+                }
+                
+                // Add new rating
+                selectedSong.setRating(newRating);
+                ratingTree->insert_song(selectedSong, newRating);
+                
+                // Update song in database
+                songDatabase->update_song_rating(songId, newRating);
+                
+                dashboard->updateStats();
+                std::cout << "Song rated successfully! " << selectedSong.getTitle() 
+                          << " now has " << newRating << " stars." << std::endl;
+                pauseScreen();
+                break;
+            }
+            case 7: {
+                Song* selectedSong = selectSongFromDatabase("Select song to delete from rating tree");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
+                
+                int rating = selectedSong->getRating();
+                if (rating <= 0) {
+                    std::cout << "This song has no rating to delete." << std::endl;
+                    pauseScreen();
+                    break;
+                }
+                
+                if (ratingTree->delete_song(selectedSong->getId(), rating)) {
+                    selectedSong->setRating(0);
+                    songDatabase->update_song_rating(selectedSong->getId(), 0);
                     dashboard->updateStats();
                     std::cout << "Song deleted from rating tree successfully!" << std::endl;
                 } else {
@@ -304,23 +374,21 @@ void PlayWiseApp::handleDatabaseOperations() {
                 pauseScreen();
                 break;
             case 3: {
-                std::string songId = getValidString("Enter song ID: ");
-                Song* foundSong = songDatabase->search_by_id(songId);
-                if (foundSong) {
-                    std::cout << "Found: " << foundSong->getTitle() << " - " << foundSong->getArtist() << std::endl;
+                Song* selectedSong = selectSongFromDatabase("Select song to search by ID");
+                if (selectedSong) {
+                    std::cout << "Found: " << selectedSong->getTitle() << " - " << selectedSong->getArtist() << std::endl;
                 } else {
-                    std::cout << "Song not found!" << std::endl;
+                    std::cout << "No song selected." << std::endl;
                 }
                 pauseScreen();
                 break;
             }
             case 4: {
-                std::string title = getValidString("Enter song title: ");
-                Song* foundSong = songDatabase->search_by_title(title);
-                if (foundSong) {
-                    std::cout << "Found: " << foundSong->getTitle() << " - " << foundSong->getArtist() << std::endl;
+                Song* selectedSong = selectSongFromDatabase("Select song to search by title");
+                if (selectedSong) {
+                    std::cout << "Found: " << selectedSong->getTitle() << " - " << selectedSong->getArtist() << std::endl;
                 } else {
-                    std::cout << "Song not found!" << std::endl;
+                    std::cout << "No song selected." << std::endl;
                 }
                 pauseScreen();
                 break;
@@ -364,7 +432,14 @@ void PlayWiseApp::handleDatabaseOperations() {
                 break;
             }
             case 8: {
-                std::string songId = getValidString("Enter song ID: ");
+                Song* selectedSong = selectSongFromDatabase("Select song to delete from database");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
+                
+                std::string songId = selectedSong->getId();
                 if (songDatabase->delete_song(songId)) {
                     dashboard->updateStats();
                     std::cout << "Song deleted from database successfully!" << std::endl;
@@ -604,6 +679,74 @@ int PlayWiseApp::getValidInt(const std::string& prompt, int min, int max) {
     }
 }
 
+// Song selection helper methods
+void PlayWiseApp::displaySongsWithIndices(const std::vector<Song>& songs, const std::string& title) {
+    std::cout << "\n=== " << title << " ===" << std::endl;
+    if (songs.empty()) {
+        std::cout << "No songs available." << std::endl;
+        return;
+    }
+    
+    for (size_t i = 0; i < songs.size(); i++) {
+        std::cout << (i + 1) << ". " << songs[i].getTitle() 
+                  << " - " << songs[i].getArtist();
+        
+        // Show additional info if available
+        if (songs[i].getRating() > 0) {
+            std::cout << " (Rating: " << songs[i].getRating() << "★)";
+        }
+        if (songs[i].getDuration() > 0) {
+            std::cout << " [" << songs[i].getDurationString() << "]";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+int PlayWiseApp::selectSongFromList(const std::vector<Song>& songs, const std::string& prompt) {
+    if (songs.empty()) {
+        std::cout << "No songs available for selection." << std::endl;
+        return -1;
+    }
+    
+    displaySongsWithIndices(songs);
+    return getValidInt(prompt + " (1-" + std::to_string(songs.size()) + "): ", 1, songs.size());
+}
+
+Song* PlayWiseApp::selectSongFromDatabase(const std::string& prompt) {
+    std::vector<Song> allSongs = songDatabase->get_all_songs();
+    if (allSongs.empty()) {
+        std::cout << "No songs in database." << std::endl;
+        return nullptr;
+    }
+    
+    int choice = selectSongFromList(allSongs, prompt);
+    if (choice == -1) return nullptr;
+    
+    Song selectedSong = allSongs[choice - 1];
+    return songDatabase->search_by_id(selectedSong.getId());
+}
+
+Song* PlayWiseApp::selectSongFromPlaylist(const std::string& prompt) {
+    std::vector<Song> playlistSongs;
+    PlaylistNode* current = currentPlaylist->getHead();
+    while (current != nullptr) {
+        playlistSongs.push_back(current->song);
+        current = current->next;
+    }
+    
+    if (playlistSongs.empty()) {
+        std::cout << "No songs in current playlist." << std::endl;
+        return nullptr;
+    }
+    
+    int choice = selectSongFromList(playlistSongs, prompt);
+    if (choice == -1) return nullptr;
+    
+    Song selectedSong = playlistSongs[choice - 1];
+    return songDatabase->search_by_id(selectedSong.getId());
+}
+
 // Data management
 void PlayWiseApp::loadSampleData() {
     // Add sample songs to the system
@@ -836,11 +979,14 @@ void PlayWiseApp::handleSongCleanerOperations() {
                 break;
             }
             case 3: {
-                std::string title = getValidString("Enter song title: ");
-                std::string artist = getValidString("Enter artist name: ");
-                Song testSong("", title, artist, 180, 3);
+                Song* selectedSong = selectSongFromDatabase("Select song to check for duplicates");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
                 
-                if (songCleaner->isDuplicate(testSong)) {
+                if (songCleaner->isDuplicate(*selectedSong)) {
                     std::cout << "This song is a duplicate!" << std::endl;
                 } else {
                     std::cout << "This song is not a duplicate." << std::endl;
@@ -849,12 +995,14 @@ void PlayWiseApp::handleSongCleanerOperations() {
                 break;
             }
             case 4: {
-                std::string title = getValidString("Enter song title: ");
-                std::string artist = getValidString("Enter artist name: ");
-                int duration = getValidInt("Enter duration (in seconds): ", 1, 3600);
-                Song testSong("", title, artist, duration, 3);
+                Song* selectedSong = selectSongFromDatabase("Select song to add to cleaner");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
                 
-                if (songCleaner->addSong(testSong)) {
+                if (songCleaner->addSong(*selectedSong)) {
                     std::cout << "Song added to cleaner successfully!" << std::endl;
                 } else {
                     std::cout << "Song is a duplicate and was not added." << std::endl;
@@ -918,24 +1066,28 @@ void PlayWiseApp::handleFavoriteSongsOperations() {
                 pauseScreen();
                 break;
             case 2: {
-                std::string title = getValidString("Enter song title: ");
-                std::string artist = getValidString("Enter artist name: ");
-                int duration = getValidInt("Enter duration (in seconds): ", 1, 3600);
-                int rating = getValidInt("Enter rating (1-5): ", 1, 5);
-                Song newSong("", title, artist, duration, rating);
+                Song* selectedSong = selectSongFromDatabase("Select song to add to favorites");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
                 
-                favoriteSongsQueue->addSong(newSong);
+                favoriteSongsQueue->addSong(*selectedSong);
                 std::cout << "Song added to favorites!" << std::endl;
                 pauseScreen();
                 break;
             }
             case 3: {
-                std::string title = getValidString("Enter song title: ");
-                std::string artist = getValidString("Enter artist name: ");
-                Song songToRemove("", title, artist, 180, 3);
+                Song* selectedSong = selectSongFromDatabase("Select song to remove from favorites");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
                 
-                if (favoriteSongsQueue->isInFavorites(songToRemove)) {
-                    favoriteSongsQueue->removeSong(songToRemove);
+                if (favoriteSongsQueue->isInFavorites(*selectedSong)) {
+                    favoriteSongsQueue->removeSong(*selectedSong);
                     std::cout << "Song removed from favorites!" << std::endl;
                 } else {
                     std::cout << "Song not found in favorites." << std::endl;
@@ -944,22 +1096,28 @@ void PlayWiseApp::handleFavoriteSongsOperations() {
                 break;
             }
             case 4: {
-                std::string title = getValidString("Enter song title: ");
-                std::string artist = getValidString("Enter artist name: ");
-                int additionalTime = getValidInt("Enter additional listening time (in seconds): ", 1, 3600);
-                Song songToUpdate("", title, artist, 180, 3);
+                Song* selectedSong = selectSongFromDatabase("Select song to update listening time");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
                 
-                favoriteSongsQueue->updateListeningTime(songToUpdate, additionalTime);
+                int additionalTime = getValidInt("Enter additional listening time (in seconds): ", 1, 3600);
+                favoriteSongsQueue->updateListeningTime(*selectedSong, additionalTime);
                 std::cout << "Listening time updated! Queue automatically re-sorted." << std::endl;
                 pauseScreen();
                 break;
             }
             case 5: {
-                std::string title = getValidString("Enter song title: ");
-                std::string artist = getValidString("Enter artist name: ");
-                Song songToUpdate("", title, artist, 180, 3);
+                Song* selectedSong = selectSongFromDatabase("Select song to increment play count");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
                 
-                favoriteSongsQueue->incrementPlayCount(songToUpdate);
+                favoriteSongsQueue->incrementPlayCount(*selectedSong);
                 std::cout << "Play count incremented! Queue automatically re-sorted." << std::endl;
                 pauseScreen();
                 break;
@@ -995,14 +1153,17 @@ void PlayWiseApp::handleFavoriteSongsOperations() {
                 break;
             }
             case 8: {
-                std::string title = getValidString("Enter song title: ");
-                std::string artist = getValidString("Enter artist name: ");
-                Song songToCheck("", title, artist, 180, 3);
+                Song* selectedSong = selectSongFromDatabase("Select song to check if in favorites");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
                 
-                if (favoriteSongsQueue->isInFavorites(songToCheck)) {
+                if (favoriteSongsQueue->isInFavorites(*selectedSong)) {
                     std::cout << "Song is in favorites!" << std::endl;
-                    std::cout << "Listening time: " << favoriteSongsQueue->getListeningTime(songToCheck) << " seconds" << std::endl;
-                    std::cout << "Play count: " << favoriteSongsQueue->getPlayCount(songToCheck) << std::endl;
+                    std::cout << "Listening time: " << favoriteSongsQueue->getListeningTime(*selectedSong) << " seconds" << std::endl;
+                    std::cout << "Play count: " << favoriteSongsQueue->getPlayCount(*selectedSong) << std::endl;
                 } else {
                     std::cout << "Song is not in favorites." << std::endl;
                 }
@@ -1025,14 +1186,15 @@ void PlayWiseApp::handleFavoriteSongsOperations() {
             case 10: {
                 // Simulate auto-update from playback
                 std::cout << "=== Auto-Update from Playback Simulation ===" << std::endl;
-                std::string title = getValidString("Enter song title: ");
-                std::string artist = getValidString("Enter artist name: ");
-                int duration = getValidInt("Enter song duration (in seconds): ", 1, 3600);
-                int playbackTime = getValidInt("Enter playback time (in seconds): ", 1, duration);
-                int rating = getValidInt("Enter rating (1-5): ", 1, 5);
+                Song* selectedSong = selectSongFromDatabase("Select song for playback simulation");
+                if (!selectedSong) {
+                    std::cout << "No song selected." << std::endl;
+                    pauseScreen();
+                    break;
+                }
                 
-                Song songToPlay("", title, artist, duration, rating);
-                favoriteSongsQueue->autoUpdateFromPlayback(songToPlay, playbackTime);
+                int playbackTime = getValidInt("Enter playback time (in seconds): ", 1, selectedSong->getDuration());
+                favoriteSongsQueue->autoUpdateFromPlayback(*selectedSong, playbackTime);
                 
                 std::cout << "Song automatically added/updated in favorites!" << std::endl;
                 std::cout << "Queue automatically re-sorted by listening time." << std::endl;

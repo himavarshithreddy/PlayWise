@@ -54,6 +54,12 @@ private:
     std::string getValidString(const std::string& prompt);
     int getValidInt(const std::string& prompt, int min, int max);
     
+    // Song selection helpers
+    void displaySongsWithIndices(const std::vector<Song>& songs, const std::string& title = "Available Songs");
+    int selectSongFromList(const std::vector<Song>& songs, const std::string& prompt = "Select song number");
+    Song* selectSongFromDatabase(const std::string& prompt = "Select song from database");
+    Song* selectSongFromPlaylist(const std::string& prompt = "Select song from playlist");
+    
     // Data management
     void loadSampleData();
     void saveSystemState();

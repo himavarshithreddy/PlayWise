@@ -106,6 +106,22 @@ bool SongDatabase::update_song(const Song& song) {
     return true;
 }
 
+bool SongDatabase::update_song_rating(const std::string& songId, int newRating) {
+    auto it = songsById.find(songId);
+    if (it == songsById.end()) {
+        return false;  // Song not found
+    }
+    
+    // Validate rating
+    if (newRating < 1 || newRating > 5) {
+        return false;  // Invalid rating
+    }
+    
+    // Update the song's rating
+    it->second.setRating(newRating);
+    return true;
+}
+
 // Search operations
 Song* SongDatabase::search_by_id(const std::string& songId) {
     auto it = songsById.find(songId);

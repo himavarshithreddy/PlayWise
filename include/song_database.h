@@ -45,6 +45,7 @@ public:
     bool insert_song(const Song& song);
     bool delete_song(const std::string& songId);
     bool update_song(const Song& song);
+    bool update_song_rating(const std::string& songId, int newRating);
     
     // Search operations
     Song* search_by_id(const std::string& songId);

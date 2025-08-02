@@ -173,10 +173,10 @@ The system automatically logs warnings for operations that exceed performance th
 ### Running the Logging Demo
 ```bash
 # Build the logging demo
-make logging-demo
+g++ -std=c++17 -Wall -Wextra -Iinclude -o logging_demo.exe src/demo_logging.cpp src/logger.cpp src/song.cpp src/playlist.cpp src/history.cpp src/favorite_songs_queue.cpp src/rating_tree.cpp src/song_database.cpp
 
 # Run the demo
-./bin/logging_demo
+./logging_demo.exe
 ```
 
 ### Demo Features

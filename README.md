@@ -67,7 +67,6 @@ PlayWise/
 ├── docs/                   # Documentation
 │   └── technical_design.md # Technical design document
 ├── tests/                  # Test files
-├── Makefile               # Build configuration
 └── README.md              # This file
 ```
 
@@ -75,14 +74,8 @@ PlayWise/
 
 ### Prerequisites
 - C++17 compatible compiler (GCC, Clang, or MSVC)
-- Make (optional, for using Makefile)
 
 ### Compilation
-
-#### Using Makefile (Linux/macOS)
-```bash
-make all
-```
 
 #### Manual Compilation (Windows)
 ```bash

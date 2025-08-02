@@ -74,48 +74,41 @@ Playwise/
 │   └── test_auto_sort.cpp        # Comprehensive test suite
 ├── docs/
 │   └── auto_sorting_favorites.md # Technical documentation
-└── Makefile                      # Build system with demo/test targets
 ```
 
 ## 🛠️ Building and Running
 
 ### Prerequisites
 - C++17 compatible compiler (GCC, Clang, MSVC)
-- Make utility
 
 ### Build Commands
 ```bash
-# Build everything (main app + demo + tests)
-make
+# Build main application
+g++ -std=c++17 -Wall -Wextra -Iinclude -o playwise.exe src/*.cpp
 
-# Build and run main application
-make run
+# Build auto-sorting demo
+g++ -std=c++17 -Wall -Wextra -Iinclude -o auto_sort_demo.exe src/demo_auto_sort.cpp src/favorite_songs_queue.cpp src/song.cpp
 
-# Build and run auto-sorting demo
-make demo
-
-# Build and run test suite
-make test
-
-# Clean build files
-make clean
-
-# Show help
-make help
+# Build test suite
+g++ -std=c++17 -Wall -Wextra -Iinclude -o auto_sort_test.exe tests/test_auto_sort.cpp src/favorite_songs_queue.cpp src/song.cpp
 ```
 
 ## 🎮 Usage Examples
 
 ### 1. Main Application
 ```bash
-make run
+# Build and run
+g++ -std=c++17 -Wall -Wextra -Iinclude -o playwise.exe src/*.cpp
+./playwise.exe
 # Navigate to "Favorite Songs Queue" menu
 # Choose from 15 different operations
 ```
 
 ### 2. Interactive Demo
 ```bash
-make demo
+# Build and run
+g++ -std=c++17 -Wall -Wextra -Iinclude -o auto_sort_demo.exe src/demo_auto_sort.cpp src/favorite_songs_queue.cpp src/song.cpp
+./auto_sort_demo.exe
 # Watch real-time auto-sorting in action
 # See priority queue behavior
 # View statistics and analytics
@@ -123,7 +116,9 @@ make demo
 
 ### 3. Test Suite
 ```bash
-make test
+# Build and run
+g++ -std=c++17 -Wall -Wextra -Iinclude -o auto_sort_test.exe tests/test_auto_sort.cpp src/favorite_songs_queue.cpp src/song.cpp
+./auto_sort_test.exe
 # Verify all functionality works correctly
 # Test auto-sorting, multi-level sorting, etc.
 ```

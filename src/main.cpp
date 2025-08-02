@@ -1,5 +1,8 @@
 #include "../include/playwise_app.h"
 #include <iostream>
+#include <exception>
+
+using namespace std;
 
 int main() {
     std::cout << "PlayWise Music Playlist Management System" << std::endl;
@@ -16,3 +19,6 @@ int main() {
         std::cout << "Error during execution: " << e.what() << std::endl;
         return 1;
     }
+    
+    return 0;
+}

@@ -17,6 +17,10 @@ OBJECTS = $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 DEMO_SOURCES = $(filter-out $(SRCDIR)/main.cpp, $(wildcard $(SRCDIR)/*.cpp)) $(SRCDIR)/demo_auto_sort.cpp
 DEMO_OBJECTS = $(DEMO_SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 
+# Logging demo source files
+LOGGING_DEMO_SOURCES = $(filter-out $(SRCDIR)/main.cpp, $(wildcard $(SRCDIR)/*.cpp)) $(SRCDIR)/demo_logging.cpp
+LOGGING_DEMO_OBJECTS = $(LOGGING_DEMO_SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+
 # Test source files
 TEST_SOURCES = $(filter-out $(SRCDIR)/main.cpp, $(wildcard $(SRCDIR)/*.cpp)) tests/test_auto_sort.cpp
 TEST_OBJECTS = $(TEST_SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o) $(OBJDIR)/test_auto_sort.o
@@ -24,10 +28,11 @@ TEST_OBJECTS = $(TEST_SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o) $(OBJDIR)/test_auto
 # Target executables
 TARGET = $(BINDIR)/playwise
 DEMO_TARGET = $(BINDIR)/auto_sort_demo
+LOGGING_DEMO_TARGET = $(BINDIR)/logging_demo
 TEST_TARGET = $(BINDIR)/auto_sort_test
 
 # Default target
-all: $(TARGET) $(DEMO_TARGET) $(TEST_TARGET)
+all: $(TARGET) $(DEMO_TARGET) $(LOGGING_DEMO_TARGET) $(TEST_TARGET)
 
 # Create directories
 $(OBJDIR):
@@ -52,6 +57,10 @@ $(TARGET): $(OBJECTS) | $(BINDIR)
 $(DEMO_TARGET): $(DEMO_OBJECTS) | $(BINDIR)
 	$(CXX) $(DEMO_OBJECTS) -o $(DEMO_TARGET)
 
+# Link logging demo executable
+$(LOGGING_DEMO_TARGET): $(LOGGING_DEMO_OBJECTS) | $(BINDIR)
+	$(CXX) $(LOGGING_DEMO_OBJECTS) -o $(LOGGING_DEMO_TARGET)
+
 # Link test executable
 $(TEST_TARGET): $(TEST_OBJECTS) | $(BINDIR)
 	$(CXX) $(TEST_OBJECTS) -o $(TEST_TARGET)
@@ -63,6 +72,10 @@ run: $(TARGET)
 # Run the auto-sorting demo
 demo: $(DEMO_TARGET)
 	./$(DEMO_TARGET)
+
+# Run the logging demo
+logging-demo: $(LOGGING_DEMO_TARGET)
+	./$(LOGGING_DEMO_TARGET)
 
 # Run the auto-sorting tests
 test: $(TEST_TARGET)
@@ -96,6 +109,7 @@ help:
 	@echo "  all          - Build the project (default)"
 	@echo "  run          - Build and run the main program"
 	@echo "  demo         - Build and run the auto-sorting demo"
+	@echo "  logging-demo - Build and run the logging demo"
 	@echo "  test         - Build and run the auto-sorting tests"
 	@echo "  clean        - Remove build files"
 	@echo "  rebuild      - Clean and rebuild"
@@ -106,6 +120,7 @@ help:
 	@echo "  make         - Build the project"
 	@echo "  make run     - Build and run main program"
 	@echo "  make demo    - Build and run auto-sorting demo"
+	@echo "  make logging-demo - Build and run logging demo"
 	@echo "  make test    - Build and run auto-sorting tests"
 	@echo "  make clean   - Clean build files"
 	@echo ""
@@ -116,6 +131,13 @@ help:
 	@echo "  - Multi-level sorting (time, play count, title)"
 	@echo "  - Statistics and analytics"
 	@echo "  - Comprehensive test suite"
+	@echo ""
+	@echo "Logging Features:"
+	@echo "  - Comprehensive operation logging"
+	@echo "  - Performance timing and metrics"
+	@echo "  - Data structure operation tracking"
+	@echo "  - Console and file output"
+	@echo "  - Thread-safe logging with timestamps"
 
 # Phony targets
-.PHONY: all run demo test clean rebuild install-deps install-deps-windows install-deps-macos help 
+.PHONY: all run demo logging-demo test clean rebuild install-deps install-deps-windows install-deps-macos help 

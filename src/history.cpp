@@ -1,5 +1,4 @@
 #include "../include/history.h"
-#include "../include/logger.h"
 #include <fstream>
 #include <algorithm>
 #include <unordered_map>
@@ -15,8 +14,6 @@ History::History(int maxSize) : maxSize(maxSize) {
 
 // Core operations
 void History::add_played_song(const Song& song) {
-    auto start = std::chrono::high_resolution_clock::now();
-    
     // Check if we need to remove oldest songs to maintain max size
     if (playbackHistory.size() >= static_cast<size_t>(maxSize)) {
         // Remove oldest songs by creating a temporary stack
@@ -42,21 +39,10 @@ void History::add_played_song(const Song& song) {
     }
     
     playbackHistory.push(song);
-    
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    
-    std::string details = "Added song: " + song.getTitle() + " by " + song.getArtist();
-    LOG_STACK_OP("ADD_PLAYED_SONG", details, playbackHistory.size(), duration_us);
 }
 
 Song History::undo_last_play() {
-    auto start = std::chrono::high_resolution_clock::now();
-    
     if (playbackHistory.empty()) {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        LOG_STACK_OP("UNDO_LAST_PLAY_FAILED", "Stack is empty", playbackHistory.size(), duration_us);
         // Return an empty song if history is empty
         return Song();
     }
@@ -64,11 +50,6 @@ Song History::undo_last_play() {
     Song lastSong = playbackHistory.top();
     playbackHistory.pop();
     
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    
-    std::string details = "Undid last play: " + lastSong.getTitle() + " by " + lastSong.getArtist();
-    LOG_STACK_OP("UNDO_LAST_PLAY", details, playbackHistory.size(), duration_us);
     return lastSong;
 }
 

@@ -1,5 +1,4 @@
 #include "../include/favorite_songs_queue.h"
-#include "../include/logger.h"
 #include <iostream>
 #include <algorithm>
 #include <cstdlib> // For rand()
@@ -19,8 +18,6 @@ std::string FavoriteSongsQueue::generateSongKey(const Song& song) const {
 
 // Add a song to favorites
 void FavoriteSongsQueue::addSong(const Song& song) {
-    auto start = std::chrono::high_resolution_clock::now();
-    
     std::string key = generateSongKey(song);
     
     // If song is not already in favorites, add it
@@ -31,18 +28,6 @@ void FavoriteSongsQueue::addSong(const Song& song) {
         // Add to priority queue
         SongWithDuration songWithDuration(song, 0, 0);
         songQueue.push(songWithDuration);
-        
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        
-        std::string details = "Added song: " + song.getTitle() + " by " + song.getArtist();
-        LOG_QUEUE_OP("ADD_SONG", details, songQueue.size(), duration_us);
-    } else {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        
-        std::string details = "Song already exists: " + song.getTitle() + " by " + song.getArtist();
-        LOG_QUEUE_OP("ADD_SONG_SKIP", details, songQueue.size(), duration_us);
     }
 }
 
@@ -77,8 +62,6 @@ void FavoriteSongsQueue::removeSong(const Song& song) {
 
 // Update listening duration for a song
 void FavoriteSongsQueue::updateListeningTime(const Song& song, int additionalSeconds) {
-    auto start = std::chrono::high_resolution_clock::now();
-    
     std::string key = generateSongKey(song);
     
     // Add song to favorites if not already present
@@ -91,12 +74,6 @@ void FavoriteSongsQueue::updateListeningTime(const Song& song, int additionalSec
     
     // Rebuild queue to maintain correct order
     rebuildQueue();
-    
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    
-    std::string details = "Updated listening time for: " + song.getTitle() + " (+" + std::to_string(additionalSeconds) + "s)";
-    LOG_QUEUE_OP("UPDATE_LISTENING_TIME", details, songQueue.size(), duration_us);
 }
 
 // Update play count for a song

@@ -168,11 +168,27 @@ g++ -std=c++17 -Wall -Wextra -Iinclude -o playwise src/*.cpp
 
 The system includes comprehensive testing for all components:
 
-- **Unit Tests** - Individual component testing
-- **Integration Tests** - System interaction testing
+- **Unit Tests** - Individual component testing (46 tests)
+- **Integration Tests** - System interaction testing (10 tests)
 - **Performance Tests** - Algorithm benchmarking
 - **Memory Tests** - Memory leak detection
 - **Edge Case Tests** - Boundary condition testing
+- **Error Handling Tests** - Exception and error scenario testing
+
+### Test Suite Features
+- **56 Total Test Cases** covering all functionality
+- **Custom Test Framework** with assertion macros
+- **Performance Timing** with microsecond precision
+- **Comprehensive Coverage** of edge cases and error scenarios
+- **Easy Build System** with automated test runner
+
+### Running Tests
+```bash
+cd tests
+build_tests.bat
+```
+
+See `tests/README_TESTS.md` for detailed testing documentation.
 
 ## 📚 Technical Documentation
 

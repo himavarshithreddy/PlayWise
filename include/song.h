@@ -54,7 +54,7 @@ public:
     void setAddedDate(const std::string& date);
 
     // Utility methods
-    std::string getDurationString() const;  // Convert seconds to MM:SS format
+    std::string getDurationString() const;  
     void display() const;                   // Display song information
     bool isValid() const;                   // Check if song data is valid
 

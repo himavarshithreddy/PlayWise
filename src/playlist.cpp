@@ -1,5 +1,4 @@
 #include "../include/playlist.h"
-#include "../include/logger.h"
 #include <algorithm>
 #include <random>
 #include <chrono>
@@ -96,29 +95,15 @@ void Playlist::removeNode(PlaylistNode* node) {
 
 // Core playlist operations
 void Playlist::add_song(const std::string& title, const std::string& artist, int duration) {
-    auto start = std::chrono::high_resolution_clock::now();
-    
-    Song song("", title, artist, duration);
+    // Generate a unique ID based on current timestamp and size
+    std::string id = std::to_string(size + 1);
+    Song song(id, title, artist, duration);
     add_song(song);
-    
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    
-    std::string details = "Added song: " + title + " by " + artist;
-    LOG_LL_OP("ADD_SONG", details, size, duration_us);
 }
 
 void Playlist::add_song(const Song& song) {
-    auto start = std::chrono::high_resolution_clock::now();
-    
     PlaylistNode* newNode = new PlaylistNode(song);
     insertNode(newNode, tail);
-    
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    
-    std::string details = "Added song: " + song.getTitle() + " by " + song.getArtist();
-    LOG_LL_OP("ADD_SONG_OBJECT", details, size, duration_us);
 }
 
 void Playlist::add_song_at(const Song& song, int position) {
@@ -134,24 +119,12 @@ void Playlist::add_song_at(const Song& song, int position) {
 }
 
 bool Playlist::delete_song(int index) {
-    auto start = std::chrono::high_resolution_clock::now();
-    
     PlaylistNode* node = getNodeAt(index);
     if (node == nullptr) {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        LOG_LL_OP("DELETE_SONG_FAILED", "Invalid index: " + std::to_string(index), size, duration_us);
         return false;
     }
     
-    std::string songTitle = node->song.getTitle();
     removeNode(node);
-    
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    
-    std::string details = "Deleted song: " + songTitle + " at index " + std::to_string(index);
-    LOG_LL_OP("DELETE_SONG", details, size, duration_us);
     return true;
 }
 
@@ -163,27 +136,16 @@ bool Playlist::delete_song_by_id(const std::string& songId) {
 }
 
 bool Playlist::move_song(int from_index, int to_index) {
-    auto start = std::chrono::high_resolution_clock::now();
-    
     if (from_index < 0 || from_index >= size || to_index < 0 || to_index >= size) {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        LOG_LL_OP("MOVE_SONG_FAILED", "Invalid indices: " + std::to_string(from_index) + " -> " + std::to_string(to_index), size, duration_us);
         return false;
     }
     
     if (from_index == to_index) {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        LOG_LL_OP("MOVE_SONG_SKIP", "Same position: " + std::to_string(from_index), size, duration_us);
         return true;
     }
     
     PlaylistNode* fromNode = getNodeAt(from_index);
     if (fromNode == nullptr) {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        LOG_LL_OP("MOVE_SONG_FAILED", "Node not found at index: " + std::to_string(from_index), size, duration_us);
         return false;
     }
     
@@ -202,11 +164,6 @@ bool Playlist::move_song(int from_index, int to_index) {
         insertNode(newNode, afterNode);
     }
     
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    
-    std::string details = "Moved song: " + songToMove.getTitle() + " from " + std::to_string(from_index) + " to " + std::to_string(to_index);
-    LOG_LL_OP("MOVE_SONG", details, size, duration_us);
     return true;
 }
 

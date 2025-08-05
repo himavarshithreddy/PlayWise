@@ -4,12 +4,8 @@
 #include <ctime>
 
 // Default constructor
-Song::Song() : duration(0), rating(0) {
-    // Generate a unique ID based on current timestamp
+Song::Song() : id(""), title(""), artist(""), duration(0), rating(0) {
     std::time_t now = std::time(nullptr);
-    std::stringstream ss;
-    ss << "song_" << now;
-    id = ss.str();
     addedDate = std::to_string(now);
 }
 
@@ -46,7 +42,7 @@ void Song::setTitle(const std::string& title) { this->title = title; }
 void Song::setArtist(const std::string& artist) { this->artist = artist; }
 void Song::setDuration(int duration) { this->duration = duration; }
 void Song::setRating(int rating) { 
-    if (rating >= 0 && rating <= 5) {
+    if (rating >= 0 && rating <= 6) {
         this->rating = rating; 
     }
 }
@@ -56,11 +52,17 @@ void Song::setAddedDate(const std::string& date) { this->addedDate = date; }
 
 // Utility methods
 std::string Song::getDurationString() const {
-    int minutes = duration / 60;
+    int hours = duration / 3600;
+    int minutes = (duration % 3600) / 60;
     int seconds = duration % 60;
+    
     std::stringstream ss;
-    ss << std::setfill('0') << std::setw(2) << minutes << ":" 
-       << std::setfill('0') << std::setw(2) << seconds;
+    if (hours > 0) {
+        ss << hours << ":" << std::setfill('0') << std::setw(2) << minutes << ":" 
+           << std::setfill('0') << std::setw(2) << seconds;
+    } else {
+        ss << minutes << ":" << std::setfill('0') << std::setw(2) << seconds;
+    }
     return ss.str();
 }
 

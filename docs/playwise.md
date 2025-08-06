@@ -1,3 +1,10 @@
+---
+Header:
+  Left: ""
+  Center: ""
+  Right: ""
+---
+
 **PlayWise Hackathon -- Solution Document**
 
 **Track:** DSA -- Smart Playlist Management System
@@ -52,6 +59,89 @@
   </div>
 
 **4. Core Feature-wise Implementation**
+
+**Feature:** Song Class (Fundamental Data Model)
+
+- **Scenario Brief**  
+  Serves as the foundational data structure for the entire PlayWise system, representing individual music tracks with comprehensive metadata. The Song class encapsulates all essential information including unique identification, track details, rating system, and metadata fields. It acts as the primary data unit that flows through all other components of the system including playlists, databases, trees, and sorting algorithms.
+
+- **Data Structures Used**  
+  - std::string for text-based fields (id, title, artist, album, genre, addedDate)
+  - int for numerical fields (duration in seconds, rating 1-5 scale)
+  - Getter/setter pattern for controlled data access
+  - Comparison operators for sorting and searching operations
+  - Validation methods for data integrity
+
+- **Time and Space Complexity**  
+  - Constructor: O(1) time, O(1) space
+  - All getters/setters: O(1) time, O(1) space
+  - getDurationString(): O(1) time, O(1) space
+  - display(): O(1) time, O(1) space
+  - isValid(): O(1) time, O(1) space
+  - Comparison operators: O(1) time, O(1) space
+  - Overall space complexity: O(1) per song object
+
+- **Sample Input & Output**  
+  ```
+  Input: 
+  - Create song: ID="1", Title="Bohemian Rhapsody", Artist="Queen", Duration=355, Rating=5
+  - Set album: "A Night at the Opera"
+  - Set genre: "Rock"
+  - Get duration string and display
+  
+  Output: 
+  - Song object with all metadata populated
+  - Duration string: "5:55"
+  - Display: "1. Bohemian Rhapsody by Queen (5:55) - Rating: 5/5 stars"
+  - Valid song: true
+  ```
+
+- **Code Snippet**  
+  ```cpp
+  class Song {
+  private:
+      std::string id;
+      std::string title;
+      std::string artist;
+      int duration;  // in seconds
+      int rating;    // 1-5 stars
+      std::string album;
+      std::string genre;
+      std::string addedDate;
+  
+  public:
+      // Constructor with essential parameters
+      Song(const std::string& id, const std::string& title, const std::string& artist, 
+           int duration, int rating = 0) 
+          : id(id), title(title), artist(artist), duration(duration), rating(rating) {}
+      
+      // Duration formatting for display
+      std::string getDurationString() const {
+          int minutes = duration / 60;
+          int seconds = duration % 60;
+          return std::to_string(minutes) + ":" + 
+                 (seconds < 10 ? "0" : "") + std::to_string(seconds);
+      }
+      
+      // Data validation
+      bool isValid() const {
+          return !title.empty() && !artist.empty() && 
+                 duration > 0 && rating >= 0 && rating <= 5;
+      }
+      
+      // Comparison for sorting
+      bool operator<(const Song& other) const {
+          return title < other.title;
+      }
+  };
+  ```
+
+- **Challenges Faced & How You Solved Them**  
+  **Data Validation**: Ensuring all song data is valid and consistent across the system. Solved by implementing isValid() method with comprehensive checks for required fields and rating bounds.
+  
+  **Duration Formatting**: Converting seconds to human-readable MM:SS format. Solved by implementing getDurationString() with proper zero-padding for seconds.
+  
+  **Memory Efficiency**: Minimizing memory footprint while maintaining functionality. Solved by using appropriate data types and avoiding unnecessary member variables.
 
 **Feature:** Playlist Engine (Doubly Linked List)
 

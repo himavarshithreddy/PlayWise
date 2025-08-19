@@ -16,10 +16,21 @@ bool testPlaylistToHistoryIntegration() {
     // Test integration between playlist and history
     Playlist playlist("Test Playlist");
     History history(10);
+    SongDatabase database;
     
-    // Add songs to playlist
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
+    // Add songs to database
+    Song dbSong1("1", "Song 1", "Artist 1", 180, 0);
+    Song dbSong2("2", "Song 2", "Artist 2", 200, 0);
+    database.insert_song(dbSong1);
+    database.insert_song(dbSong2);
+
+    // Add songs from database to playlist
+    Song* found1 = database.search_by_title("Song 1");
+    Song* found2 = database.search_by_title("Song 2");
+    ASSERT_NOT_NULL(found1);
+    ASSERT_NOT_NULL(found2);
+    playlist.add_song(*found1);
+    playlist.add_song(*found2);
     
     // Simulate playing songs from playlist
     Song* song1 = playlist.get_song_at(0);
@@ -128,11 +139,23 @@ bool testRatingTreeToPlaylistIntegration() {
 bool testSortingToPlaylistIntegration() {
     // Test integration between sorting and playlist
     Playlist playlist("Test");
+    SongDatabase database;
     
-    // Add songs in random order
-    playlist.add_song("Zebra", "Artist C", 300);
-    playlist.add_song("Apple", "Artist A", 180);
-    playlist.add_song("Banana", "Artist B", 200);
+    // Add songs to database
+    database.insert_song(Song("10", "Zebra", "Artist C", 300, 0));
+    database.insert_song(Song("11", "Apple", "Artist A", 180, 0));
+    database.insert_song(Song("12", "Banana", "Artist B", 200, 0));
+
+    // Add songs from database to playlist (random order)
+    Song* s1 = database.search_by_title("Zebra");
+    Song* s2 = database.search_by_title("Apple");
+    Song* s3 = database.search_by_title("Banana");
+    ASSERT_NOT_NULL(s1);
+    ASSERT_NOT_NULL(s2);
+    ASSERT_NOT_NULL(s3);
+    playlist.add_song(*s1);
+    playlist.add_song(*s2);
+    playlist.add_song(*s3);
     
     // Convert playlist to vector for sorting
     std::vector<Song> songs;

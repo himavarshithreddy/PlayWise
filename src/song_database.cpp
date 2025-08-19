@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <sstream>
+#include <unordered_set>
 
 // Constructor
 SongDatabase::SongDatabase() {}
@@ -15,14 +16,14 @@ SongDatabase::~SongDatabase() {
 // Copy constructor
 SongDatabase::SongDatabase(const SongDatabase& other) {
     songsById = other.songsById;
-    titleToId = other.titleToId;
+    titleArtistKeys = other.titleArtistKeys;
 }
 
 // Assignment operator
 SongDatabase& SongDatabase::operator=(const SongDatabase& other) {
     if (this != &other) {
         songsById = other.songsById;
-        titleToId = other.titleToId;
+        titleArtistKeys = other.titleArtistKeys;
     }
     return *this;
 }
@@ -39,11 +40,16 @@ bool SongDatabase::isValidSongId(const std::string& songId) const {
 }
 
 // Core operations
+std::string SongDatabase::generateCompositeKey(const std::string& title, const std::string& artist) const {
+    return normalizeString(title) + "|||" + normalizeString(artist);
+}
+
 bool SongDatabase::insert_song(const Song& song) {
     if (!song.isValid()) return false;
     
     std::string songId = song.getId();
     std::string title = song.getTitle();
+    std::string artist = song.getArtist();
     
     if (!isValidSongId(songId)) return false;
     
@@ -52,17 +58,15 @@ bool SongDatabase::insert_song(const Song& song) {
         return false;  // Song already exists
     }
     
-    // Check if title already exists (case-insensitive)
-    std::string normalizedTitle = normalizeString(title);
-    for (const auto& pair : titleToId) {
-        if (normalizeString(pair.first) == normalizedTitle) {
-            return false;  // Title already exists
-        }
+    // Check for duplicate title+artist (normalized)
+    std::string compositeKey = generateCompositeKey(title, artist);
+    if (titleArtistKeys.find(compositeKey) != titleArtistKeys.end()) {
+        return false; // Duplicate title+artist
     }
     
     // Insert the song
     songsById[songId] = song;
-    titleToId[title] = songId;
+    titleArtistKeys.insert(compositeKey);
     
     return true;
 }
@@ -73,9 +77,10 @@ bool SongDatabase::delete_song(const std::string& songId) {
         return false;  // Song not found
     }
     
-    // Remove from title mapping
+    // Remove from composite key set
     std::string title = it->second.getTitle();
-    titleToId.erase(title);
+    std::string artist = it->second.getArtist();
+    titleArtistKeys.erase(generateCompositeKey(title, artist));
     
     // Remove from songs mapping
     songsById.erase(it);
@@ -94,12 +99,20 @@ bool SongDatabase::update_song(const Song& song) {
     
     // Update the song
     std::string oldTitle = it->second.getTitle();
+    std::string oldArtist = it->second.getArtist();
     std::string newTitle = song.getTitle();
+    std::string newArtist = song.getArtist();
     
-    // Update title mapping if title changed
-    if (oldTitle != newTitle) {
-        titleToId.erase(oldTitle);
-        titleToId[newTitle] = songId;
+    // Update composite key if title or artist changed
+    if (oldTitle != newTitle || oldArtist != newArtist) {
+        titleArtistKeys.erase(generateCompositeKey(oldTitle, oldArtist));
+        std::string newKey = generateCompositeKey(newTitle, newArtist);
+        // Prevent update to a duplicate key
+        auto existing = titleArtistKeys.find(newKey);
+        if (existing != titleArtistKeys.end()) {
+            return false;
+        }
+        titleArtistKeys.insert(newKey);
     }
     
     it->second = song;
@@ -132,9 +145,11 @@ Song* SongDatabase::search_by_id(const std::string& songId) {
 }
 
 Song* SongDatabase::search_by_title(const std::string& title) {
-    auto it = titleToId.find(title);
-    if (it != titleToId.end()) {
-        return search_by_id(it->second);
+    // Linear search by exact title (case-sensitive), for simplicity.
+    for (auto& pair : songsById) {
+        if (pair.second.getTitle() == title) {
+            return &pair.second;
+        }
     }
     return nullptr;
 }
@@ -232,7 +247,7 @@ bool SongDatabase::is_empty() const { return songsById.empty(); }
 
 void SongDatabase::clear() {
     songsById.clear();
-    titleToId.clear();
+    titleArtistKeys.clear();
 }
 
 // Batch operations
@@ -338,9 +353,7 @@ bool SongDatabase::contains_song(const std::string& songId) const {
     return songsById.find(songId) != songsById.end();
 }
 
-bool SongDatabase::contains_title(const std::string& title) const {
-    return titleToId.find(title) != titleToId.end();
-}
+// contains_title removed in favor of composite key enforcement
 
 void SongDatabase::sync_with_playlist(const std::vector<Song>& playlistSongs) {
     // Add any songs from playlist that aren't in database

@@ -11,6 +11,7 @@
 #include "song_cleaner.h"
 #include "favorite_songs_queue.h"
 #include <string>
+#include <vector>
 
 /**
  * @brief PlayWise Application - Main application class
@@ -59,6 +60,7 @@ private:
     int selectSongFromList(const std::vector<Song>& songs, const std::string& prompt = "Select song number");
     Song* selectSongFromDatabase(const std::string& prompt = "Select song from database");
     Song* selectSongFromPlaylist(const std::string& prompt = "Select song from playlist");
+    Song* selectSongFromDatabaseNotInPlaylist(const std::string& prompt = "Select song from database (not already in playlist)");
     
     // Data management
     void loadSampleData();

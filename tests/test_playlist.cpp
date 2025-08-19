@@ -1,6 +1,7 @@
 #include "test_framework.h"
 #include "../include/playlist.h"
 #include "../include/song.h"
+#include "../include/song_database.h"
 #include <iostream>
 #include <string>
 
@@ -30,8 +31,13 @@ bool testPlaylistDefaultConstructor() {
 
 bool testPlaylistAddSong() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Test Song", "Test Artist", 180);
+    Song newSong("100", "Test Song", "Test Artist", 180, 0);
+    database.insert_song(newSong);
+    Song* fromDb = database.search_by_title("Test Song");
+    ASSERT_NOT_NULL(fromDb);
+    playlist.add_song(*fromDb);
     
     ASSERT_EQUAL(1, playlist.getSize());
     ASSERT_FALSE(playlist.isEmpty());
@@ -41,10 +47,14 @@ bool testPlaylistAddSong() {
 
 bool testPlaylistAddMultipleSongs() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
-    playlist.add_song("Song 3", "Artist 3", 160);
+    database.insert_song(Song("101", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("102", "Song 2", "Artist 2", 200, 0));
+    database.insert_song(Song("103", "Song 3", "Artist 3", 160, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
+    playlist.add_song(*database.search_by_title("Song 3"));
     
     ASSERT_EQUAL(3, playlist.getSize());
     
@@ -53,9 +63,12 @@ bool testPlaylistAddMultipleSongs() {
 
 bool testPlaylistDeleteSong() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
+    database.insert_song(Song("201", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("202", "Song 2", "Artist 2", 200, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
     
     bool result = playlist.delete_song(0);
     
@@ -67,8 +80,10 @@ bool testPlaylistDeleteSong() {
 
 bool testPlaylistDeleteInvalidIndex() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
+    database.insert_song(Song("203", "Song 1", "Artist 1", 180, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
     
     bool result = playlist.delete_song(5); // Invalid index
     
@@ -91,10 +106,14 @@ bool testPlaylistDeleteFromEmpty() {
 
 bool testPlaylistMoveSong() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
-    playlist.add_song("Song 3", "Artist 3", 160);
+    database.insert_song(Song("301", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("302", "Song 2", "Artist 2", 200, 0));
+    database.insert_song(Song("303", "Song 3", "Artist 3", 160, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
+    playlist.add_song(*database.search_by_title("Song 3"));
     
     bool result = playlist.move_song(0, 2);
     
@@ -106,8 +125,10 @@ bool testPlaylistMoveSong() {
 
 bool testPlaylistMoveInvalidIndices() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
+    database.insert_song(Song("304", "Song 1", "Artist 1", 180, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
     
     bool result = playlist.move_song(0, 5); // Invalid target index
     
@@ -118,8 +139,10 @@ bool testPlaylistMoveInvalidIndices() {
 
 bool testPlaylistMoveSamePosition() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
+    database.insert_song(Song("305", "Song 1", "Artist 1", 180, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
     
     bool result = playlist.move_song(0, 0); // Same position
     
@@ -130,10 +153,14 @@ bool testPlaylistMoveSamePosition() {
 
 bool testPlaylistReverse() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
-    playlist.add_song("Song 3", "Artist 3", 160);
+    database.insert_song(Song("401", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("402", "Song 2", "Artist 2", 200, 0));
+    database.insert_song(Song("403", "Song 3", "Artist 3", 160, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
+    playlist.add_song(*database.search_by_title("Song 3"));
     
     playlist.reverse_playlist();
     
@@ -155,8 +182,10 @@ bool testPlaylistReverseEmpty() {
 
 bool testPlaylistReverseSingle() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
+    database.insert_song(Song("404", "Song 1", "Artist 1", 180, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
     playlist.reverse_playlist();
     
     ASSERT_EQUAL(1, playlist.getSize());
@@ -166,10 +195,14 @@ bool testPlaylistReverseSingle() {
 
 bool testPlaylistShuffle() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
-    playlist.add_song("Song 3", "Artist 3", 160);
+    database.insert_song(Song("501", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("502", "Song 2", "Artist 2", 200, 0));
+    database.insert_song(Song("503", "Song 3", "Artist 3", 160, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
+    playlist.add_song(*database.search_by_title("Song 3"));
     
     playlist.shuffle();
     
@@ -191,8 +224,10 @@ bool testPlaylistShuffleEmpty() {
 
 bool testPlaylistShuffleSingle() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
+    database.insert_song(Song("504", "Song 1", "Artist 1", 180, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
     playlist.shuffle();
     
     ASSERT_EQUAL(1, playlist.getSize());
@@ -202,9 +237,12 @@ bool testPlaylistShuffleSingle() {
 
 bool testPlaylistClear() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
+    database.insert_song(Song("601", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("602", "Song 2", "Artist 2", 200, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
     
     playlist.clear();
     
@@ -227,9 +265,12 @@ bool testPlaylistClearEmpty() {
 
 bool testPlaylistFindSongById() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
+    database.insert_song(Song("701", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("702", "Song 2", "Artist 2", 200, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
     
     Song* found = playlist.find_song_by_id("1");
     
@@ -241,8 +282,10 @@ bool testPlaylistFindSongById() {
 
 bool testPlaylistFindSongByIdNotFound() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
+    database.insert_song(Song("703", "Song 1", "Artist 1", 180, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
     
     Song* found = playlist.find_song_by_id("999");
     
@@ -253,9 +296,12 @@ bool testPlaylistFindSongByIdNotFound() {
 
 bool testPlaylistFindSongByTitle() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
+    database.insert_song(Song("801", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("802", "Song 2", "Artist 2", 200, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
     
     Song* found = playlist.find_song_by_title("Song 2");
     
@@ -267,8 +313,10 @@ bool testPlaylistFindSongByTitle() {
 
 bool testPlaylistFindSongByTitleNotFound() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
+    database.insert_song(Song("803", "Song 1", "Artist 1", 180, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
     
     Song* found = playlist.find_song_by_title("Nonexistent Song");
     
@@ -279,9 +327,12 @@ bool testPlaylistFindSongByTitleNotFound() {
 
 bool testPlaylistFindSongIndex() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
+    database.insert_song(Song("901", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("902", "Song 2", "Artist 2", 200, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
     
     int index = playlist.find_song_index("2");
     
@@ -292,8 +343,10 @@ bool testPlaylistFindSongIndex() {
 
 bool testPlaylistFindSongIndexNotFound() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
+    database.insert_song(Song("903", "Song 1", "Artist 1", 180, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
     
     int index = playlist.find_song_index("999");
     
@@ -304,9 +357,12 @@ bool testPlaylistFindSongIndexNotFound() {
 
 bool testPlaylistGetSongAt() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
+    database.insert_song(Song("1001", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("1002", "Song 2", "Artist 2", 200, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
     
     Song* song = playlist.get_song_at(1);
     
@@ -318,8 +374,10 @@ bool testPlaylistGetSongAt() {
 
 bool testPlaylistGetSongAtInvalidIndex() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
+    database.insert_song(Song("1003", "Song 1", "Artist 1", 180, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
     
     Song* song = playlist.get_song_at(5);
     
@@ -330,6 +388,7 @@ bool testPlaylistGetSongAtInvalidIndex() {
 
 bool testPlaylistCopyConstructor() {
     Playlist original("Original");
+    SongDatabase database;
     original.add_song("Song 1", "Artist 1", 180);
     original.add_song("Song 2", "Artist 2", 200);
     
@@ -343,6 +402,7 @@ bool testPlaylistCopyConstructor() {
 
 bool testPlaylistAssignmentOperator() {
     Playlist original("Original");
+    SongDatabase database;
     original.add_song("Song 1", "Artist 1", 180);
     
     Playlist assigned("Assigned");
@@ -356,6 +416,7 @@ bool testPlaylistAssignmentOperator() {
 
 bool testPlaylistSelfAssignment() {
     Playlist playlist("Test");
+    SongDatabase database;
     playlist.add_song("Song 1", "Artist 1", 180);
     
     playlist = playlist; // Self-assignment
@@ -368,10 +429,14 @@ bool testPlaylistSelfAssignment() {
 
 bool testPlaylistLargeNumberOfSongs() {
     Playlist playlist("Large Test");
+    SongDatabase database;
     
-    // Add many songs
+    // Add many songs via database then to playlist
     for (int i = 0; i < 1000; i++) {
-        playlist.add_song("Song " + std::to_string(i), "Artist " + std::to_string(i), 180 + i);
+        Song s(std::to_string(2000 + i), "Song " + std::to_string(i), "Artist " + std::to_string(i), 180 + i, 0);
+        database.insert_song(s);
+        Song* fromDb = database.search_by_title("Song " + std::to_string(i));
+        playlist.add_song(*fromDb);
     }
     
     ASSERT_EQUAL(1000, playlist.getSize());
@@ -400,9 +465,12 @@ bool testPlaylistEdgeCaseNames() {
 
 bool testPlaylistDeleteBySongId() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
-    playlist.add_song("Song 2", "Artist 2", 200);
+    database.insert_song(Song("1101", "Song 1", "Artist 1", 180, 0));
+    database.insert_song(Song("1102", "Song 2", "Artist 2", 200, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
+    playlist.add_song(*database.search_by_title("Song 2"));
     
     bool result = playlist.delete_song_by_id("1");
     
@@ -414,8 +482,10 @@ bool testPlaylistDeleteBySongId() {
 
 bool testPlaylistDeleteBySongIdNotFound() {
     Playlist playlist("Test");
+    SongDatabase database;
     
-    playlist.add_song("Song 1", "Artist 1", 180);
+    database.insert_song(Song("1103", "Song 1", "Artist 1", 180, 0));
+    playlist.add_song(*database.search_by_title("Song 1"));
     
     bool result = playlist.delete_song_by_id("999");
     

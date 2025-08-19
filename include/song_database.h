@@ -3,6 +3,7 @@
 
 #include "song.h"
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -26,11 +27,13 @@
 class SongDatabase {
 private:
     std::unordered_map<std::string, Song> songsById;      // song_id -> Song
-    std::unordered_map<std::string, std::string> titleToId; // title -> song_id
+    // Track unique composite keys (normalized title + artist) to prevent duplicates
+    std::unordered_set<std::string> titleArtistKeys; 
     
     // Helper methods
     std::string normalizeString(const std::string& str) const;
     bool isValidSongId(const std::string& songId) const;
+    std::string generateCompositeKey(const std::string& title, const std::string& artist) const;
 
 public:
     // Constructors and Destructor
@@ -75,7 +78,6 @@ public:
     
     // Database management
     bool contains_song(const std::string& songId) const;
-    bool contains_title(const std::string& title) const;
     void sync_with_playlist(const std::vector<Song>& playlistSongs);
     void export_to_file(const std::string& filename) const;
     bool import_from_file(const std::string& filename);

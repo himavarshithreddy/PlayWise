@@ -187,44 +187,7 @@ int Sorting::partition(std::vector<Song>& songs, int low, int high,
     return i + 1;
 }
 
-// Heap Sort Implementation
-void Sorting::heapSort(std::vector<Song>& songs, SortCriteria criteria) {
-    if (songs.size() <= 1) return;
-    
-    auto compare = getComparator(criteria);
-    int n = static_cast<int>(songs.size());
-    
-    // Build heap (rearrange array)
-    for (int i = n / 2 - 1; i >= 0; i--) {
-        heapify(songs, n, i, compare);
-    }
-    
-    // One by one extract an element from heap
-    for (int i = n - 1; i > 0; i--) {
-        swap(songs[0], songs[i]);
-        heapify(songs, i, 0, compare);
-    }
-}
 
-void Sorting::heapify(std::vector<Song>& songs, int n, int i,
-                     std::function<bool(const Song&, const Song&)> compare) {
-    int largest = i;
-    int left = 2 * i + 1;
-    int right = 2 * i + 2;
-    
-    if (left < n && compare(songs[largest], songs[left])) {
-        largest = left;
-    }
-    
-    if (right < n && compare(songs[largest], songs[right])) {
-        largest = right;
-    }
-    
-    if (largest != i) {
-        swap(songs[i], songs[largest]);
-        heapify(songs, n, largest, compare);
-    }
-}
 
 // Main sorting interface
 void Sorting::sortPlaylist(std::vector<Song>& songs, SortCriteria criteria, const std::string& algorithm) {
@@ -239,8 +202,6 @@ void Sorting::sortPlaylist(std::vector<Song>& songs, SortCriteria criteria, cons
         mergeSort(songs, criteria);
     } else if (algorithm == "quick") {
         quickSort(songs, criteria);
-    } else if (algorithm == "heap") {
-        heapSort(songs, criteria);
     } else {
         std::cout << "Unknown algorithm, using merge sort as default." << std::endl;
         mergeSort(songs, criteria);
@@ -286,17 +247,9 @@ void Sorting::benchmarkSorting(std::vector<Song>& songs) {
         end = std::chrono::high_resolution_clock::now();
         auto quickTime = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
         
-        // Test Heap Sort
-        testSongs = songs; // Reset
-        start = std::chrono::high_resolution_clock::now();
-        heapSort(testSongs, criterion);
-        end = std::chrono::high_resolution_clock::now();
-        auto heapTime = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        
         std::cout << "Criterion: " << getCriteriaName(criterion) << std::endl;
         std::cout << std::setw(20) << "Merge Sort" << std::setw(15) << mergeTime.count() << std::endl;
         std::cout << std::setw(20) << "Quick Sort" << std::setw(15) << quickTime.count() << std::endl;
-        std::cout << std::setw(20) << "Heap Sort" << std::setw(15) << heapTime.count() << std::endl;
         std::cout << std::endl;
     }
 } 

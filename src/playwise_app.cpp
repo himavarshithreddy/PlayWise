@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <limits>
+#include <unordered_set>
 
 // Constructor
 PlayWiseApp::PlayWiseApp() : currentPlaylist(nullptr), playbackHistory(nullptr),
@@ -85,12 +86,15 @@ void PlayWiseApp::handlePlaylistOperations() {
                 pauseScreen();
                 break;
             case 2: {
-                std::string title = getValidString("Enter song title: ");
-                std::string artist = getValidString("Enter artist name: ");
-                int duration = getValidInt("Enter duration (in seconds): ", 1, 3600);
-                currentPlaylist->add_song(title, artist, duration);
+                Song* selectedSong = selectSongFromDatabaseNotInPlaylist("Select song to add to playlist");
+                if (!selectedSong) {
+                    std::cout << "No eligible songs to add." << std::endl;
+                    pauseScreen();
+                    break;
+                }
+                currentPlaylist->add_song(*selectedSong);
                 dashboard->updateStats();
-                std::cout << "Song added successfully!" << std::endl;
+                std::cout << "Song added to playlist!" << std::endl;
                 pauseScreen();
                 break;
             }
@@ -421,7 +425,21 @@ void PlayWiseApp::handleDatabaseOperations() {
                 std::string album = getValidString("Enter album name: ");
                 std::string genre = getValidString("Enter genre: ");
                 
-                Song song("", title, artist, duration, rating, album, genre);
+                // Generate a unique ID based on current database size with zero padding, avoiding collisions
+                int nextIndex = songDatabase->get_size() + 1;
+                std::string id;
+                auto makeId = [](int n) {
+                    if (n < 10) return std::string("song_00") + std::to_string(n);
+                    if (n < 100) return std::string("song_0") + std::to_string(n);
+                    return std::string("song_") + std::to_string(n);
+                };
+                id = makeId(nextIndex);
+                while (songDatabase->contains_song(id)) {
+                    nextIndex++;
+                    id = makeId(nextIndex);
+                }
+                
+                Song song(id, title, artist, duration, rating, album, genre);
                 if (songDatabase->insert_song(song)) {
                     dashboard->updateStats();
                     std::cout << "Song added to database successfully!" << std::endl;
@@ -490,7 +508,6 @@ void PlayWiseApp::handleSortingOperations() {
         }
         
         Sorting::SortCriteria criteria;
-        std::string algorithm = "merge";
         
         switch (choice) {
             case 1:
@@ -517,6 +534,25 @@ void PlayWiseApp::handleSortingOperations() {
                 continue;
         }
         
+        // Let user choose sorting algorithm
+        std::cout << "\n=== Choose Sorting Algorithm ===" << std::endl;
+        std::cout << "1. Merge Sort (stable, O(n log n))" << std::endl;
+        std::cout << "2. Quick Sort (fast average, O(n log n))" << std::endl;
+        std::cout << "Enter algorithm choice (1-2): ";
+        
+        int algoChoice = getValidChoice(1, 2);
+        std::string algorithm;
+        
+        switch (algoChoice) {
+            case 1:
+                algorithm = "merge";
+                break;
+            case 2:
+                algorithm = "quick";
+                break;
+        }
+        
+        std::cout << "\nSorting with " << algorithm << " sort..." << std::endl;
         Sorting::sortPlaylist(songs, criteria, algorithm);
         
         // Update playlist with sorted songs
@@ -693,7 +729,7 @@ void PlayWiseApp::displaySongsWithIndices(const std::vector<Song>& songs, const 
         
         // Show additional info if available
         if (songs[i].getRating() > 0) {
-            std::cout << " (Rating: " << songs[i].getRating() << "★)";
+            std::cout << " (Rating: " << songs[i].getRating() << "/5)";
         }
         if (songs[i].getDuration() > 0) {
             std::cout << " [" << songs[i].getDurationString() << "]";
@@ -724,6 +760,37 @@ Song* PlayWiseApp::selectSongFromDatabase(const std::string& prompt) {
     if (choice == -1) return nullptr;
     
     Song selectedSong = allSongs[choice - 1];
+    return songDatabase->search_by_id(selectedSong.getId());
+}
+
+Song* PlayWiseApp::selectSongFromDatabaseNotInPlaylist(const std::string& prompt) {
+    // Build a set of song IDs currently in the playlist
+    std::unordered_set<std::string> playlistIds;
+    PlaylistNode* node = currentPlaylist->getHead();
+    while (node != nullptr) {
+        playlistIds.insert(node->song.getId());
+        node = node->next;
+    }
+
+    // Filter database songs to those not already in the playlist
+    std::vector<Song> allSongs = songDatabase->get_all_songs();
+    std::vector<Song> candidates;
+    candidates.reserve(allSongs.size());
+    for (const Song& s : allSongs) {
+        if (playlistIds.find(s.getId()) == playlistIds.end()) {
+            candidates.push_back(s);
+        }
+    }
+
+    if (candidates.empty()) {
+        std::cout << "All database songs are already in the playlist." << std::endl;
+        return nullptr;
+    }
+
+    int choice = selectSongFromList(candidates, prompt);
+    if (choice == -1) return nullptr;
+
+    Song selectedSong = candidates[choice - 1];
     return songDatabase->search_by_id(selectedSong.getId());
 }
 

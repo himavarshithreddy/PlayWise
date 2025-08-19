@@ -19,7 +19,6 @@
  * Time Complexity Analysis:
  * - Merge Sort: O(n log n) time, O(n) space
  * - Quick Sort: O(n log n) average, O(n²) worst case, O(log n) space
- * - Heap Sort: O(n log n) time, O(1) space
  * 
  * Space Complexity: Varies by algorithm
  */
@@ -42,7 +41,6 @@ public:
     // Sorting algorithms
     static void mergeSort(std::vector<Song>& songs, SortCriteria criteria);
     static void quickSort(std::vector<Song>& songs, SortCriteria criteria);
-    static void heapSort(std::vector<Song>& songs, SortCriteria criteria);
     
     // Utility functions
     static std::string getCriteriaName(SortCriteria criteria);
@@ -69,9 +67,7 @@ private:
     static int partition(std::vector<Song>& songs, int low, int high,
                         std::function<bool(const Song&, const Song&)> compare);
     
-    // Helper functions for heap sort
-    static void heapify(std::vector<Song>& songs, int n, int i,
-                       std::function<bool(const Song&, const Song&)> compare);
+
     
     // Utility functions
     static std::function<bool(const Song&, const Song&)> getComparator(SortCriteria criteria);

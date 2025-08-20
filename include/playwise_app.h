@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+
+
 /**
  * @brief PlayWise Application - Main application class
  * 
@@ -30,6 +32,7 @@ private:
     Dashboard* dashboard;
     SongCleaner* songCleaner;
     FavoriteSongsQueue* favoriteSongsQueue;
+
     
     // Application state
     bool isRunning;
@@ -47,6 +50,7 @@ private:
     void handleSystemOperations();
     void handleSongCleanerOperations();
     void handleFavoriteSongsOperations();
+    void handleSimulatePlaybackOperations();
     
     // Utility methods
     void clearScreen();

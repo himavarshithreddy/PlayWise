@@ -17,7 +17,8 @@ PlayWise is a sophisticated music playlist management system that showcases the 
 5. **Song Database** - HashMap for O(1) average time song lookup
 6. **Sorting Module** - Multiple sorting algorithms (Merge, Quick, Heap Sort)
 7. **Dashboard** - Real-time system monitoring and analytics
-8. **Main Application** - Complete user interface and system integration
+8. **Music Recommendation System** - AI-powered song suggestions based on listening patterns
+9. **Main Application** - Complete user interface and system integration
 
 ## 🚀 Features
 
@@ -39,6 +40,7 @@ PlayWise is a sophisticated music playlist management system that showcases the 
 - 🎯 **Real-time Analytics** - Live system monitoring and statistics
 - 🔄 **Undo/Redo System** - Playback history management
 - 📊 **Performance Metrics** - System health and optimization suggestions
+- 🎵 **Music Recommendations** - AI-powered song suggestions based on listening history
 - 💾 **Data Persistence** - Export/import functionality
 - 🎨 **User-friendly Interface** - Menu-driven console application
 
@@ -53,7 +55,8 @@ PlayWise/
 │   ├── rating_tree.h       # Rating Tree (BST)
 │   ├── song_database.h     # Song Database (HashMap)
 │   ├── sorting.h           # Sorting algorithms
-│   └── dashboard.h         # System dashboard
+│   ├── dashboard.h         # System dashboard
+│   └── recommendation_system.h # Music Recommendation System
 ├── src/                    # Source files
 │   ├── song.cpp            # Song class implementation
 │   ├── playlist.cpp        # Playlist implementation
@@ -62,6 +65,7 @@ PlayWise/
 │   ├── song_database.cpp   # Database implementation
 │   ├── sorting.cpp         # Sorting algorithms
 │   ├── dashboard.cpp       # Dashboard implementation
+│   ├── recommendation_system.cpp # Recommendation System implementation
 │   ├── playwise_app.cpp    # Main application
 │   └── main.cpp            # Entry point
 ├── docs/                   # Documentation
@@ -98,6 +102,25 @@ g++ -std=c++17 -Wall -Wextra -Iinclude -o playwise src/*.cpp
 ### Main Menu Options
 
 1. **Playlist Operations** - Manage your music playlists
+2. **History Operations** - View and manage playback history
+3. **Rating Operations** - Manage song ratings and view rating tree
+4. **Database Operations** - Search and manage song database
+5. **Sorting Operations** - Sort playlists using various algorithms
+6. **Dashboard & Analytics** - View system statistics and performance
+7. **Song Cleaner** - Remove duplicate songs
+8. **Favorite Songs Queue** - Manage favorite songs with auto-sorting
+9. **Music Recommendations** - Get personalized song suggestions based on your listening history
+10. **System Operations** - System management and utilities
+
+### 🎵 Music Recommendation System
+
+The recommendation system analyzes your listening history to suggest songs that match your taste:
+
+- **Personalized Recommendations** - Based on your recent listening patterns and most-listened genres
+- **Smart Algorithm** - Automatically identifies your favorite genres and suggests similar songs
+- **Rating-Based Ranking** - Higher-rated songs appear first in recommendations
+
+Access via **Option 9** from the main menu to directly view personalized recommendations.
    - Add/remove songs
    - Move songs within playlist
    - Reverse playlist order

@@ -7,7 +7,7 @@
 
 // Constructor
 Dashboard::Dashboard() : currentPlaylist(nullptr), playbackHistory(nullptr), 
-                        ratingTree(nullptr), songDatabase(nullptr) {
+                                    ratingTree(nullptr), songDatabase(nullptr) {
     stats = {0, 0, 0, 0.0, "", "", 0, 0.0, 0};
 }
 
@@ -214,7 +214,7 @@ void Dashboard::export_snapshot() const {
     std::cout << "SONG COUNT BY RATING:" << std::endl;
     auto ratingCounts = getSongCountByRating();
     for (const auto& pair : ratingCounts) {
-        std::cout << "  " << pair.first << " stars: " << pair.second << " songs" << std::endl;
+        std::cout << "  Rating " << pair.first << "/5: " << pair.second << " songs" << std::endl;
     }
     std::cout << std::endl;
 }
@@ -280,7 +280,7 @@ void Dashboard::display_user_activity() const {
         std::vector<Song> recentSongs = playbackHistory->get_recent_songs(3);
         for (size_t i = 0; i < recentSongs.size(); i++) {
             std::cout << "  " << (i + 1) << ". " << recentSongs[i].getTitle() 
-                      << " - " << recentSongs[i].getArtist() << std::endl;
+                      << " - " << recentSongs[i].getArtist() << " [" << recentSongs[i].getGenre() << "]" << std::endl;
         }
     }
     std::cout << std::endl;
@@ -503,4 +503,5 @@ bool Dashboard::is_initialized() const {
 
 std::string Dashboard::get_dashboard_version() const {
     return "1.0.0";
-} 
+}
+

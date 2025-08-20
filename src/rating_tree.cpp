@@ -199,7 +199,7 @@ void RatingTree::display_tree() const {
     std::vector<int> ratings = get_all_ratings();
     for (int rating : ratings) {
         std::vector<Song> songs = get_songs_by_rating(rating);
-        std::cout << "Rating " << rating << " stars (" << songs.size() << " songs):" << std::endl;
+        std::cout << "Rating " << rating << "/5 (" << songs.size() << " songs):" << std::endl;
         for (const Song& song : songs) {
             std::cout << "  - " << song.getTitle() << " - " << song.getArtist() << std::endl;
         }
@@ -212,12 +212,12 @@ void RatingTree::display_rating_stats() const {
     std::cout << "Total songs: " << totalSongs << std::endl;
     std::cout << "Tree height: " << get_height() << std::endl;
     std::cout << "Average rating: " << get_average_rating() << std::endl;
-    std::cout << "Most common rating: " << get_most_common_rating() << " stars" << std::endl;
+    std::cout << "Most common rating: " << get_most_common_rating() << "/5" << std::endl;
     
     std::vector<int> ratings = get_all_ratings();
     for (int rating : ratings) {
         std::vector<Song> songs = get_songs_by_rating(rating);
-        std::cout << rating << " stars: " << songs.size() << " songs" << std::endl;
+        std::cout << "Rating " << rating << "/5: " << songs.size() << " songs" << std::endl;
     }
     std::cout << std::endl;
 }

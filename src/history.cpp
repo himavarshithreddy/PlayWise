@@ -114,7 +114,7 @@ void History::display_history() const {
     for (int i = songs.size() - 1; i >= 0; i--) {
         std::cout << songs.size() - i << ". ";
         std::cout << songs[i].getTitle() << " - " << songs[i].getArtist();
-        std::cout << " (" << songs[i].getDurationString() << ")";
+        std::cout << " [" << songs[i].getGenre() << "] (" << songs[i].getDurationString() << ")";
         if (songs[i].getRating() > 0) {
             std::cout << " [Rating: " << songs[i].getRating() << "/5]";
         }
@@ -150,7 +150,7 @@ void History::display_recent_songs(int count) const {
     for (size_t i = 0; i < recentSongs.size(); i++) {
         std::cout << i + 1 << ". ";
         std::cout << recentSongs[i].getTitle() << " - " << recentSongs[i].getArtist();
-        std::cout << " (" << recentSongs[i].getDurationString() << ")";
+        std::cout << " [" << recentSongs[i].getGenre() << "] (" << recentSongs[i].getDurationString() << ")";
         if (recentSongs[i].getRating() > 0) {
             std::cout << " [Rating: " << recentSongs[i].getRating() << "/5]";
         }
@@ -255,7 +255,7 @@ void History::export_history_to_file(const std::string& filename) const {
         for (int i = songs.size() - 1; i >= 0; i--) {
             file << songs.size() - i << ". ";
             file << songs[i].getTitle() << " - " << songs[i].getArtist();
-            file << " (" << songs[i].getDurationString() << ")";
+            file << " [" << songs[i].getGenre() << "] (" << songs[i].getDurationString() << ")";
             if (songs[i].getRating() > 0) {
                 file << " [Rating: " << songs[i].getRating() << "/5]";
             }

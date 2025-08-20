@@ -202,7 +202,7 @@ void Playlist::display() const {
     while (current != nullptr) {
         std::cout << index << ". ";
         std::cout << current->song.getTitle() << " - " << current->song.getArtist();
-        std::cout << " (" << current->song.getDurationString() << ")";
+        std::cout << " [" << current->song.getGenre() << "] (" << current->song.getDurationString() << ")";
         if (current->song.getRating() > 0) {
             std::cout << " [Rating: " << current->song.getRating() << "/5]";
         }
@@ -227,7 +227,7 @@ void Playlist::display_reverse() const {
     while (current != nullptr) {
         std::cout << index << ". ";
         std::cout << current->song.getTitle() << " - " << current->song.getArtist();
-        std::cout << " (" << current->song.getDurationString() << ")";
+        std::cout << " [" << current->song.getGenre() << "] (" << current->song.getDurationString() << ")";
         if (current->song.getRating() > 0) {
             std::cout << " [Rating: " << current->song.getRating() << "/5]";
         }
